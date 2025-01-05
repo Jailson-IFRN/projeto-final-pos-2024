@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Galeria de Álbuns</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #f0f0f0, #d9e4f5);
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .container {
+      width: 70%;
+      background: white;
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .form-container, .album-list-container {
+      width: 48%;
+    }
+
+    .form-container {
+      text-align: left;
+    }
+
+    h3 {
+      color: #333;
+      margin-bottom: 15px;
+    }
+
+    h2 {
+      color: #333;
+      text-align: center;
+      margin-top: 0;
+    }
+
+    input, select {
+      width: 90%; 
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 16px;
+      box-sizing: border-box; 
+    }
+
+    button {
+      background-color: #007BFF;
+      color: white;
+      border: none;
+      padding: 12px 25px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    .album-list {
+      display: flex;
+      flex-wrap: wrap;
+      padding: 0;
+      list-style: none;
+    }
+
+    .album-list li {
+      width: 100%;
+      background: #f9f9f9;
+      padding: 15px;
+      margin: 10px 0;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .arrow-link {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      font-size: 30px;
+      color: #007BFF;
+      text-decoration: none;
+      transition: color 0.3s ease;
+    }
+
+    .arrow-link:hover {
+      color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="form-container">
+      <h3 id="album-form-title">Criar Novo Álbum</h3>
+      <input type="text" id="album-title" placeholder="Título do Álbum">
+      <select id="album-user">
+        <option value="">Selecione um(a) Usuário</option>
+      </select>
+      <button onclick="handleCreateOrUpdateAlbum()">Criar Álbum</button>
+    </div>
+
+    <div class="album-list-container">
+      <h2>Álbuns</h2>
+      <ul id="album-list"></ul>
+    </div>
+  </div>
+
+  <a href="post.html" class="arrow-link">&#8594;</a>
+
+  <script>
+    let albums = [];
+    let editingAlbumIndex = -1;
+
+    function loadUsersFromLocalStorage() {
+      const users = JSON.parse(localStorage.getItem('users')) || [];
+      return users;
+    }
+
+    function loadUsersIntoSelect() {
+      const users = loadUsersFromLocalStorage();
+      const userSelect = document.getElementById('album-user');
+
+      users.forEach(user => {
+        const option = document.createElement('option');
+        option.value = user.name;
+        option.textContent = user.name;
+        userSelect.appendChild(option);
+      });
+    }
+
+    function renderAlbumList() {
+      const albumList = document.getElementById('album-list');
+      albumList.innerHTML = '';
+      albums.forEach((album, index) => {
+        const li = document.createElement('li');
+        li.innerHTML = `  
+          <span>${album.user} - ${album.title}</span>
+          <div>
+            <button onclick="editAlbum(${index})">Editar</button>
+            <button onclick="deleteAlbum(${index})">Excluir</button>
+          </div>
+        `;
+        albumList.appendChild(li);
+      });
+    }
+
+    function handleCreateOrUpdateAlbum() {
+      const title = document.getElementById('album-title').value;
+      const userName = document.getElementById('album-user').value;
+
+      if (editingAlbumIndex > -1) {
+        albums[editingAlbumIndex] = { user: userName, title };
+        editingAlbumIndex = -1;
+      } else {
+        albums.push({ user: userName, title });
+      }
+
+      document.getElementById('album-title').value = '';
+      document.getElementById('album-user').value = '';
+      renderAlbumList();
+    }
+
+    function editAlbum(index) {
+      const album = albums[index];
+      document.getElementById('album-title').value = album.title;
+      document.getElementById('album-user').value = album.user;
+      editingAlbumIndex = index;
+    }
+
+    function deleteAlbum(index) {
+      albums.splice(index, 1);
+      renderAlbumList();
+    }
+
+    loadUsersIntoSelect();
+    renderAlbumList();
+  </script>
+</body>
+</html>
