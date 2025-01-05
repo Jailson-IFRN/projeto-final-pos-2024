@@ -221,7 +221,7 @@ export default function App() {
             ))}
           </ul>
           <div>
-            <h3>{editandoTodo ? 'Editar ToDo' : 'Criar Novo ToDo'}</h3>
+            <h3>{editandoTodo ? 'Editar Todo' : 'Criar Novo Todo'}</h3>
             <input
               type="text"
               placeholder="Title"
@@ -244,7 +244,7 @@ export default function App() {
               </option>
             ))}
           </select>
-            <button onClick={handleCreateOrUpdateTodo}>{editandoTodo ? 'Salvar Alterações' : 'Criar ToDo'}</button>
+            <button onClick={handleCreateOrUpdateTodo}>{editandoTodo ? 'Salvar Alterações' : 'Criar Todo'}</button>
           </div>
         </section>
 
