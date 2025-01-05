@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gerenciamento de Fotos</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #f0f0f0, #d9e4f5);
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .container {
+      width: 80%;
+      max-width: 1200px;
+      background: white;
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 20px;
+      align-items: flex-start;
+    }
+
+    .form-container, .photo-list-container {
+      width: 48%;
+    }
+
+    .form-container {
+      text-align: left;
+    }
+
+    h3 {
+      color: #333;
+      margin-bottom: 15px;
+    }
+
+    h2 {
+      color: #333;
+      text-align: center;
+      margin-top: 0;
+    }
+
+    .right-title {
+      color: #333;
+      font-size: 24px;
+      text-align: center;
+      width: 100%;
+      margin-left: auto;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 16px;
+      box-sizing: border-box;
+    }
+
+    button {
+      background-color: #007BFF;
+      color: white;
+      border: none;
+      padding: 12px 25px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    .photo-list {
+      display: flex;
+      flex-wrap: wrap;
+      padding: 0;
+      list-style: none;
+    }
+
+    .photo-list li {
+      width: 100%;
+      background: #f9f9f9;
+      padding: 15px;
+      margin: 10px 0;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .arrow-link {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      font-size: 30px;
+      color: #007BFF;
+      text-decoration: none;
+      transition: color 0.3s ease;
+    }
+
+    .arrow-link:hover {
+      color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+
+<section class="container">
+  
+  <div class="form-container">
+    <h3 id="form-title">Criar Nova Foto</h3>
+    <input type="text" id="photo-title" placeholder="Título" />
+    <input type="text" id="photo-url" placeholder="URL" />
+    <input type="text" id="photo-thumbnail-url" placeholder="Thumbnail URL" />
+    <select id="photo-album">
+      <option value="">Selecione um Álbum</option>
+      
+    </select>
+    <button onclick="handleCreateOrUpdatePhoto()">Criar Foto</button>
+  </div>
+
+  
+  <div class="photo-list-container">
+    <h2 class="right-title">Fotos</h2>
+    <ul id="photo-list">
+      
+    </ul>
+  </div>
+</section>
+<a href="index.html" class="arrow-link">&#8594;</a>
+<script>
+  
+  const Album = [
+    { id: 1, title: 'Álbum 1' },
+    { id: 2, title: 'Álbum 2' },
+    { id: 3, title: 'Álbum 3' }
+  ];
+
+  let photos = [];
+  let editandoPhoto = null;
+
+  function renderPhotoList() {
+    const photoList = document.getElementById('photo-list');
+    photoList.innerHTML = '';
+    photos.forEach((photo, index) => {
+      const li = document.createElement('li');
+      li.innerHTML = `
+        ${photo.title} - Álbum: ${photo.album} - URL: ${photo.url} - Thumbnail: ${photo.thumbnail_url}
+        <button onclick="editPhoto(${index})">Editar</button>
+        <button onclick="deletePhoto(${index})">Excluir</button>
+      `;
+      photoList.appendChild(li);
+    });
+  }
+
+  function loadAlbumOptions() {
+    const albumSelect = document.getElementById('photo-album');
+    Album.forEach(album => {
+      const option = document.createElement('option');
+      option.value = album.id;
+      option.textContent = album.title;
+      albumSelect.appendChild(option);
+    });
+  }
+
+  function handleCreateOrUpdatePhoto() {
+    const title = document.getElementById('photo-title').value;
+    const url = document.getElementById('photo-url').value;
+    const thumbnail_url = document.getElementById('photo-thumbnail-url').value;
+    const album = document.getElementById('photo-album').value;
+
+    if (editandoPhoto !== null) {
+      photos[editandoPhoto] = { title, url, thumbnail_url, album };
+      editandoPhoto = null;
+      document.getElementById('form-title').innerText = 'Criar Nova Foto';
+    } else {
+      photos.push({ title, url, thumbnail_url, album });
+    }
+
+    clearForm();
+    renderPhotoList();
+  }
+
+  function editPhoto(index) {
+    const photo = photos[index];
+    document.getElementById('photo-title').value = photo.title;
+    document.getElementById('photo-url').value = photo.url;
+    document.getElementById('photo-thumbnail-url').value = photo.thumbnail_url;
+    document.getElementById('photo-album').value = photo.album;
+    document.getElementById('form-title').innerText = 'Editar Foto';
+    editandoPhoto = index;
+  }
+
+  function deletePhoto(index) {
+    photos.splice(index, 1);
+    renderPhotoList();
+  }
+
+  function clearForm() {
+    document.getElementById('photo-title').value = '';
+    document.getElementById('photo-url').value = '';
+    document.getElementById('photo-thumbnail-url').value = '';
+    document.getElementById('photo-album').value = '';
+  }
+
+  
+  loadAlbumOptions();
+  renderPhotoList();
+</script>
+
+</body>
+</html>
