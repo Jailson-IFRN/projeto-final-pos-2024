@@ -193,7 +193,7 @@ export const api = {
                                         throw err;
                                     }),
                                 
-                                updateAlbumt: async (id, data) => 
+                                updateAlbum: async (id, data) => 
                                     fetch(`${BASE_URL}/albums/${id}/`, {
                                         method: 'PUT',
                                         headers: { 'Content-Type': 'application/json' },

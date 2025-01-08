@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { api } from './api/apiWrapper.js';
+import './App.css';
+
 
 
 export default function App() {
@@ -25,7 +27,7 @@ export default function App() {
 
   // PARA Photos
   const [Photo, setPhoto] = useState([]);
-  const [novoPhoto, setNovoPhoto] = useState({ album: 0, title:'', url: '', thumbnail_url: '' });
+  const [novoPhoto, setNovoPhoto] = useState({ album: null, title:'', url: '', thumbnail_url: '' });
   const [editandoPhoto, setEditandoPhoto] = useState(null);
 
   // PARA ToDos
@@ -34,14 +36,95 @@ export default function App() {
   const [editandoTodo, setEditandoTodo] = useState(null);
 
 
+  const BASE_URL = 'http://127.0.0.1:8000/api';
+
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [selectedPost, setSelectedPost] = useState(null);
+  const [selectedAlbum, setSelectedAlbum] = useState(null);
+
+  // para endpoints aninhados
+  const [users, setUsers] = useState([]);
+  const [albums, setAlbums] = useState([]);
+  const [todos, setTodos] = useState([]);
+  const [posts, setPosts] = useState([]);
+  const [activeSection, setActiveSection] = useState('');
+
+  const [error, setError] = useState(null);
+
+  
+  const fetchComments = (postId) => {
+    fetch(`${BASE_URL}/posts/${postId}/comments`)
+      .then((response) => response.json())
+      .then((data) => setComment(data));
+    setSelectedPost(postId);
+  };
+
+
+  const fetchPhotos = (albumId) => {
+    fetch(`${BASE_URL}/albums/${albumId}/photos`)
+      .then((response) => response.json())
+      .then((data) => setPhoto(data));
+    setSelectedAlbum(albumId);
+  };
+
   useEffect(() => {
-    // trazer do banco do servic
+    fetch(`${BASE_URL}/users`)
+      .then((response) => response.json())
+      .then((data) => setUsers(data));
+  }, []);
+
+  
+  const fetchUserAlbums = (userId) => {
+    fetch(`${BASE_URL}/users/${userId}/albums`)
+      .then((response) => response.json())
+      .then((data) => {
+        setAlbums(data);
+        setSelectedUser(userId);
+        setActiveSection('albums');
+      });
+  };
+  const fetchUserTodos = (userId) => {
+    fetch(`${BASE_URL}/users/${userId}/todos`)
+      .then((response) => {
+        if (!response.ok) {
+           console.error(`API Error: ${response.status}`)
+          throw new Error('Erro ao buscar todos');
+        }
+        return response.json();
+      })
+      .then((data) => {
+        console.log('Todos carregados:', data);
+        setTodos(data);
+        setSelectedUser(userId);
+        setActiveSection('todos');
+        setError(null); 
+      })
+      .catch((error) => {
+        console.error("Failed to fetch todos: ", error);
+        setError("Failed to fetch todos. Please try again later.");
+        setActiveSection(null);
+    });
+  };
+
+  const fetchUserPosts = (userId) => {
+    fetch(`${BASE_URL}/users/${userId}/posts`)
+      .then((response) => response.json())
+      .then((data) => {
+        setPosts(data);
+        setSelectedUser(userId);
+        setActiveSection('posts');
+      });
+  };
+
+  useEffect(() => {
+    // trazer do banco 
     api.getUsers().then(setUser);
     api.getPosts().then(setPost);
     api.getComments().then(setComment);
     api.getAlbuns().then(setAlbum);
     api.getPhotos().then(setPhoto);
     api.getTodos().then(setTodo);
+
   }, []);
 
   const handleCreateOrUpdateUser = () => {
@@ -131,15 +214,17 @@ export default function App() {
     if (editandoPhoto) {
       api.updatePhoto(editandoPhoto.id, novoPhoto).then(() => {
         api.getPhotos().then(setPhoto);
-        setNovoPhoto({album: 0, title:'', url: '', thumbnail_url: '' });
+        setNovoPhoto({album: null, title:'', url: '', thumbnail_url: '' });
         setEditandoPhoto(null);
       }).catch(err => console.error(err));
     } else {
       api.createPhoto(novoPhoto).then(() => {
         api.getPhotos().then(setPhoto);
-        setNovoPhoto({ album: 0, title:'', url: '', thumbnail_url: '' });
+        setNovoPhoto({ album: null, title:'', url: '', thumbnail_url: '' });
       }).catch(err => console.error(err));
+      
     }
+    
   };
 
   const handleDeletePhoto = (id) => {
@@ -205,6 +290,114 @@ export default function App() {
           </div>
         </section>
 
+        <section>
+        <h2>Users e suas relações</h2>
+        <ul>
+          {User.map((user) => (
+            <li key={user.id}>
+              {user.name}
+              <button onClick={() => fetchUserAlbums(user.id)}>Albums</button>
+              <button onClick={() => fetchUserTodos(user.id)}>Todos</button>
+              <button onClick={() => fetchUserPosts(user.id)}>Posts</button>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      {/* Exibição condicional com base na seção ativa */}
+      {activeSection === 'albums' && selectedUser && (
+        <section>
+          <h2>Álbuns de {users.find((user) => user.id === selectedUser)?.name}</h2>
+          <ul>
+            {albums.map((album) => (
+              <li key={album.id}>{album.title}</li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {activeSection === 'todos' && selectedUser && (
+        <section>
+          <h2>Todos de {users.find((user) => user.id === selectedUser)?.name}</h2>
+          <ul>
+            {todos.map((todo) => (
+              <li key={todo.id}>
+                {todo.title} - {todo.completed ? 'Concluído' : 'Pendente'}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {activeSection === 'posts' && selectedUser && (
+        <section>
+          <h2>Posts de {users.find((user) => user.id === selectedUser)?.name}</h2>
+          <ul>
+            {posts.map((post) => (
+              <li key={post.id}>
+                <strong>{post.title}</strong>
+                <p>{post.body}</p>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+
+  
+
+      <section>
+        <h2>Albums e Photos</h2>
+        <ul>
+          {Album.map((album) => (
+            <li key={album.id}>
+              {album.title}
+              <button onClick={() => fetchPhotos(album.id)}>Album</button>
+            </li>
+          ))}
+        </ul>
+        {selectedAlbum && (
+          <div>
+            <h3>Photos do Album {selectedAlbum}</h3>
+            <ul>
+              {Photo.map((photo) => (
+                <li key={photo.id}>
+                  <img src={photo.thumbnailUrl} alt={photo.title} />
+                  {photo.title} -
+                  {photo.album}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </section>
+
+      <section>
+        <h2>Posts e Comments</h2>
+        <ul>
+          {Post.map((post) => (
+            <li key={post.id}>
+              <strong>{post.title}</strong>
+              <p>{post.body}</p>
+              <button onClick={() => fetchComments(post.id)}>Comments</button>
+            </li>
+          ))}
+        </ul>
+        {selectedPost && (
+          <div>
+            <h3>Comments for Post {selectedPost}</h3>
+            <ul>
+              {Comment.map((comment) => (
+                <li key={comment.id}>
+                  <strong>{comment.name}</strong> {comment.body}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </section>
+
+
 
         <section>
           <h2>ToDo</h2>
@@ -221,7 +414,7 @@ export default function App() {
             ))}
           </ul>
           <div>
-            <h3>{editandoTodo ? 'Editar Todo' : 'Criar Novo Todo'}</h3>
+            <h3>{editandoTodo ? 'Editar ToDo' : 'Criar Novo ToDo'}</h3>
             <input
               type="text"
               placeholder="Title"
@@ -244,7 +437,7 @@ export default function App() {
               </option>
             ))}
           </select>
-            <button onClick={handleCreateOrUpdateTodo}>{editandoTodo ? 'Salvar Alterações' : 'Criar Todo'}</button>
+            <button onClick={handleCreateOrUpdateTodo}>{editandoTodo ? 'Salvar Alterações' : 'Criar ToDo'}</button>
           </div>
         </section>
 
@@ -409,19 +602,21 @@ export default function App() {
             onChange={e => setNovoPhoto({ ...novoPhoto, thumbnail_url: e.target.value })}
           />
           <select
-            value={novoPhoto.album}
-            onChange={e => setNovoPhoto({ ...novoPhoto, album: e.target.value })}
-          >
-            <option value="">Selecione um Album</option>
-            {Album.map(album => (
-              <option key={album.id} value={album.id}>
-                {album.title}
-              </option>
-            ))}
+                  value={novoPhoto.album || ''}
+                  onChange={e => setNovoPhoto({ ...novoPhoto, album: parseInt(e.target.value) })}
+                >
+                  <option value="">Selecione um Album</option>
+                  {Album.map(album => (
+                    <option key={album.id} value={album.id}>
+                      {album.title}
+                    </option>
+                  ))}
           </select>
+
           <button onClick={handleCreateOrUpdatePhoto}>{editandoPhoto ? 'Salvar Alterações' : 'Criar Photo'}</button>
         </div>
       </section>
       </div>
       );
     }
+  

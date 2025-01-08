@@ -20,10 +20,10 @@ class Album(models.Model):
     title = models.CharField(max_length=200)
 
 class Photo(models.Model):
-    album = models.ForeignKey(Album, related_name="photos", on_delete=models.CASCADE)
-    title = models.CharField(max_length=200)
+    title = models.CharField(max_length=255)
     url = models.URLField()
-    thumbnail_url = models.URLField()
+    thumbnail_url = models.URLField(blank=True, null=True)
+    album = models.ForeignKey(Album, related_name='photos', on_delete=models.CASCADE)
 
 class ToDo(models.Model):
     user = models.ForeignKey(User, related_name="todos", on_delete=models.CASCADE)
