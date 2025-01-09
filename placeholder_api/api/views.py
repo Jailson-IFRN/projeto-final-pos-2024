@@ -12,11 +12,6 @@ class UserViewSet(ModelViewSet):
 class PostViewSet(ModelViewSet):
     queryset = Post.objects.all()
     serializer_class = PostSerializer
-    def create(self, request, *args, **kwargs):
-        data = request.data
-        if 'title' not in data or 'url' not in data or 'album' not in data:
-            return Response({"error": "Campos obrigatórios ausentes"}, status=status.HTTP_400_BAD_REQUEST)
-        return super().create(request, *args, **kwargs)
 
 
 class CommentViewSet(ModelViewSet):
